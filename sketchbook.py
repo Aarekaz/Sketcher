@@ -1,11 +1,12 @@
+from fileinput import filename
 import cv2 as cv
 import numpy as np
 import random
 from edges import Edges
 from background import Background
 from PIL import Image, ImageOps
+import streamlit as st
 
-filename = "test.jpg"
 
 class Sketch:
     def __init__(self, image):
@@ -14,8 +15,27 @@ class Sketch:
     def sketch(self):
         grey = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)
         inv = 255 - grey
-        blur = cv.GaussianBlur(inv, (13,13), 0)
+        blur = cv.GaussianBlur(inv, (13, 13), 0)
         return cv.divide(grey, 255-blur, scale=256)
+
+
+st.set_page_config(page_title='Sketcher',
+                   page_icon="✏️", layout='wide', initial_sidebar_state='auto')
+
+st.header("Sketcher")
+
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+filename = st.file_uploader("Choose a image file", type="jpg")
+
+
+
 
 img = Image.open(filename)
 
@@ -35,7 +55,7 @@ h, w = sketch.shape[:2]
 mask = np.zeros((h+2, w+2), np.uint8)
 #mask[1:h+1, 1:w+1] = sketch
 sketchColor = cv.cvtColor(sketch, cv.COLOR_GRAY2RGBA)
-white = np.all(sketchColor == [255,255,255,255], axis=-1)
+white = np.all(sketchColor == [255, 255, 255, 255], axis=-1)
 sketchColor[white, -1] = 0
 cv.imwrite("final.png", sketchColor)
 final = Image.fromarray(sketchColor)
